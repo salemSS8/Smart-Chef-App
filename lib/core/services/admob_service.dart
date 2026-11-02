@@ -1,50 +1,21 @@
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
-import 'package:url_launcher/url_launcher.dart';
 import '../config/admob_config.dart';
-import 'remote_config_service.dart';
 
 class AdMobService {
   AdMobService._();
 
   static bool _isInitialized = false;
 
-  /// الحصول على رابط Monetag المباشر (قابل للتغيير عن بُعد من الداش بورد إذا بدأ بـ http)
-  static String get activeMonetagUrl {
-    final remoteVal = RemoteConfigService.current.androidBannerId.trim();
-    if (remoteVal.startsWith('http://') || remoteVal.startsWith('https://')) {
-      return remoteVal;
-    }
-    return AdMobConfig.monetagDirectLinkUrl;
-  }
-
-  /// فتح إعلان Monetag المباشر (Smart Cook App - Zone 12174795) داخل متصفح التطبيق المدمج
-  static Future<void> openMonetagDirectAd() async {
-    if (!RemoteConfigService.current.adsEnabled) return;
-    try {
-      final uri = Uri.parse(activeMonetagUrl);
-      final openedInApp = await launchUrl(
-        uri,
-        mode: LaunchMode.inAppBrowserView,
-      );
-      if (!openedInApp) {
-        await launchUrl(uri, mode: LaunchMode.externalApplication);
-      }
-    } catch (e) {
-      debugPrint('خطأ في فتح رابط Monetag الإعلاني: $e');
-    }
-  }
-
-  /// تهيئة حزمة إعلانات الهاتف المحمول
+  /// تهيئة حزمة إعلانات جوجل للهاتف المحمول
   static Future<void> initialize() async {
     if (!kIsWeb && (Platform.isAndroid || Platform.isIOS)) {
       try {
         await MobileAds.instance.initialize();
         _isInitialized = true;
-        debugPrint('Mobile Ads تم تهيئتها بنجاح.');
       } catch (e) {
-        debugPrint('خطأ في تهيئة Mobile Ads: $e');
+        debugPrint('خطأ في تهيئة Google Mobile Ads: $e');
       }
     }
   }
@@ -70,20 +41,16 @@ class AdMobService {
     );
   }
 
-  /// عرض إعلان بيني (Interstitial) لمستخدمي الخطة المجانية
+  /// عرض إعلان بيني (Interstitial)
   static void showInterstitialAd({VoidCallback? onDismissed}) {
-    if (!RemoteConfigService.current.adsEnabled) {
+    final adUnitId = AdMobConfig.interstitialAdUnitId;
+    if (!_isMobilePlatform || adUnitId.isEmpty) {
       onDismissed?.call();
       return;
     }
 
-    if (!_isMobilePlatform) {
-      openMonetagDirectAd().whenComplete(() => onDismissed?.call());
-      return;
-    }
-
     InterstitialAd.load(
-      adUnitId: AdMobConfig.interstitialAdUnitId,
+      adUnitId: adUnitId,
       request: const AdRequest(),
       adLoadCallback: InterstitialAdLoadCallback(
         onAdLoaded: (ad) {
@@ -94,34 +61,31 @@ class AdMobService {
             },
             onAdFailedToShowFullScreenContent: (ad, error) {
               ad.dispose();
-              openMonetagDirectAd().whenComplete(() => onDismissed?.call());
+              onDismissed?.call();
             },
           );
           ad.show();
         },
         onAdFailedToLoad: (error) {
-          debugPrint('تحويل تلقائي إلى Monetag Direct Link بعد تعذر AdMob: $error');
-          openMonetagDirectAd().whenComplete(() => onDismissed?.call());
+          onDismissed?.call();
         },
       ),
     );
   }
 
-  /// عرض إعلان بمكافأة (Rewarded Ad) مع دعم Monetag التلقائي
+  /// عرض إعلان بمكافأة (Rewarded Ad)
   static void showRewardedAd({
     required Function(RewardItem) onUserEarnedReward,
     VoidCallback? onAdClosed,
   }) {
-    if (!_isMobilePlatform) {
-      openMonetagDirectAd().then((_) {
-        onUserEarnedReward(RewardItem(1, 'monetag_reward'));
-        onAdClosed?.call();
-      });
+    final adUnitId = AdMobConfig.rewardedAdUnitId;
+    if (!_isMobilePlatform || adUnitId.isEmpty) {
+      onAdClosed?.call();
       return;
     }
 
     RewardedAd.load(
-      adUnitId: AdMobConfig.rewardedAdUnitId,
+      adUnitId: adUnitId,
       request: const AdRequest(),
       rewardedAdLoadCallback: RewardedAdLoadCallback(
         onAdLoaded: (ad) {
@@ -132,10 +96,7 @@ class AdMobService {
             },
             onAdFailedToShowFullScreenContent: (ad, error) {
               ad.dispose();
-              openMonetagDirectAd().then((_) {
-                onUserEarnedReward(RewardItem(1, 'monetag_reward'));
-                onAdClosed?.call();
-              });
+              onAdClosed?.call();
             },
           );
           ad.show(onUserEarnedReward: (adWithoutView, reward) {
@@ -143,11 +104,7 @@ class AdMobService {
           });
         },
         onAdFailedToLoad: (error) {
-          debugPrint('تشغيل إعلان مكافأة Monetag المباشر: $error');
-          openMonetagDirectAd().then((_) {
-            onUserEarnedReward(RewardItem(1, 'monetag_reward'));
-            onAdClosed?.call();
-          });
+          onAdClosed?.call();
         },
       ),
     );

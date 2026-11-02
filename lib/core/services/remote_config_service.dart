@@ -14,7 +14,7 @@ class RemoteAppConfigData {
   final bool isAnnouncementActive;
 
   const RemoteAppConfigData({
-    this.adsEnabled = true,
+    this.adsEnabled = false,
     this.androidBannerId = AdMobConfig.androidBannerAdUnitId,
     this.androidInterstitialId = AdMobConfig.androidInterstitialAdUnitId,
     this.androidRewardedId = AdMobConfig.androidRewardedAdUnitId,
