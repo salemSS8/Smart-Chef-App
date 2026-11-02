@@ -27,9 +27,10 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: 💙 Setup Flutter SDK (Latest Stable)
+      - name: 💙 Setup Flutter SDK (3.38.9 Stable)
         uses: subosito/flutter-action@v2
         with:
+          flutter-version: '3.38.9'
           channel: 'stable'
           cache: true
 
