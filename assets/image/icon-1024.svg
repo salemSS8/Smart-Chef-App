@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+<defs><radialGradient id="g" cx="50%" cy="30%" r="80%"><stop offset="0" stop-color="#CC5A26"/><stop offset="1" stop-color="#A33F15"/></radialGradient></defs>
+<rect width="1024" height="1024" fill="url(#g)"/>
+
+<g transform="translate(0,50)">
+<path d="M350 400C320 360 380 340 350 300" fill="none" stroke="#FBF7F1" stroke-width="26" stroke-linecap="round" opacity=".7"/>
+<path d="M674 400C644 360 704 340 674 300" fill="none" stroke="#FBF7F1" stroke-width="26" stroke-linecap="round" opacity=".7"/>
+<path d="M512 175Q524 252 600 270Q524 288 512 365Q500 288 424 270Q500 252 512 175Z" fill="#FBF7F1"/>
+<path d="M690 190Q695 215 718 220Q695 225 690 250Q685 225 662 220Q685 215 690 190Z" fill="#F6D9B8"/>
+<circle cx="512" cy="412" r="32" fill="#FBF7F1"/>
+<rect x="252" y="440" width="520" height="64" rx="32" fill="#FBF7F1"/>
+<rect x="166" y="548" width="72" height="38" rx="19" fill="#FBF7F1"/>
+<rect x="786" y="548" width="72" height="38" rx="19" fill="#FBF7F1"/>
+<path d="M232 516H792V600Q792 760 632 760H392Q232 760 232 600Z" fill="#FBF7F1"/>
+<path d="M232 516H792V548H232Z" fill="#E9D3B8"/>
+</g>
+</svg>
