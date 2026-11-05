@@ -97,21 +97,38 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
-    // Filter recipes
-    final readyList = matching.readyRecipes.where((r) {
-      if (_currentFilter.maxMinutes != null && r.recipe.totalMinutes > _currentFilter.maxMinutes!) {
-        return false;
-      }
-      if (_currentFilter.cuisines.isNotEmpty && !_currentFilter.cuisines.contains(r.recipe.cuisine)) {
-        return false;
-      }
+    // Filter recipes based on pantry matching
+    final filteredReady = matching.readyRecipes.where((r) {
+      if (_currentFilter.maxMinutes != null && r.recipe.totalMinutes > _currentFilter.maxMinutes!) return false;
+      if (_currentFilter.cuisines.isNotEmpty && !_currentFilter.cuisines.contains(r.recipe.cuisine)) return false;
       return true;
     }).toList();
 
-    // Default showcase recipes if list is empty
-    final displayRecipes = readyList.isNotEmpty
-        ? readyList.map((r) => r.recipe).toList()
+    final filteredMissingOne = matching.missingOneRecipes.where((r) {
+      if (_currentFilter.maxMinutes != null && r.recipe.totalMinutes > _currentFilter.maxMinutes!) return false;
+      if (_currentFilter.cuisines.isNotEmpty && !_currentFilter.cuisines.contains(r.recipe.cuisine)) return false;
+      return true;
+    }).toList();
+
+    final filteredPartial = matching.partialRecipes.where((r) {
+      if (_currentFilter.maxMinutes != null && r.recipe.totalMinutes > _currentFilter.maxMinutes!) return false;
+      if (_currentFilter.cuisines.isNotEmpty && !_currentFilter.cuisines.contains(r.recipe.cuisine)) return false;
+      return true;
+    }).toList();
+
+    final allMatchedResults = [
+      ...filteredReady,
+      ...filteredMissingOne,
+      ...filteredPartial,
+    ];
+
+    final displayRecipes = allMatchedResults.isNotEmpty
+        ? allMatchedResults.map((m) => m.recipe).take(6).toList()
         : RecipesData.allRecipes.take(4).toList();
+
+    final topMatchScore = allMatchedResults.isNotEmpty
+        ? (allMatchedResults.first.score * 100).round()
+        : 85;
 
     final activeCookingRecipe = displayRecipes.first;
 
@@ -526,7 +543,7 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
                             borderRadius: BorderRadius.circular(10),
                           ),
                           child: Text(
-                            '٨٥٪',
+                            '$topMatchScore٪',
                             style: GoogleFonts.manrope(
                               fontSize: 10,
                               fontWeight: FontWeight.bold,
@@ -667,30 +684,54 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
                                   ),
                                 ),
 
-                                // Top Right: Ingredients Available Pill
+                                // Top Right: Dynamic Ingredients Matching Pill
                                 Positioned(
                                   top: 10,
                                   right: 10,
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                    decoration: BoxDecoration(
-                                      color: Colors.white.withAlpha(225),
-                                      borderRadius: BorderRadius.circular(20),
-                                    ),
-                                    child: Row(
-                                      children: [
-                                        const Icon(Icons.check_circle_rounded, size: 14, color: AppColors.surfaceTint),
-                                        const SizedBox(width: 4),
-                                        Text(
-                                          '${recipe.ingredients.length} مكونات متوفرة لديك',
-                                          style: GoogleFonts.manrope(
-                                            fontSize: 10,
-                                            fontWeight: FontWeight.bold,
-                                            color: AppColors.primary,
-                                          ),
+                                  child: Builder(
+                                    builder: (context) {
+                                      final match = recipe.evaluateMatch(pantry);
+                                      final isAllReady = match.isFullyReady;
+                                      final isMissingOne = match.isMissingOne;
+
+                                      return Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                        decoration: BoxDecoration(
+                                          color: isAllReady
+                                              ? AppColors.primaryFixed
+                                              : (isMissingOne ? AppColors.secondaryContainer : Colors.white.withAlpha(235)),
+                                          borderRadius: BorderRadius.circular(20),
                                         ),
-                                      ],
-                                    ),
+                                        child: Row(
+                                          children: [
+                                            Icon(
+                                              isAllReady
+                                                  ? Icons.check_circle_rounded
+                                                  : (isMissingOne ? Icons.error_outline_rounded : Icons.inventory_2_outlined),
+                                              size: 14,
+                                              color: isAllReady
+                                                  ? AppColors.primary
+                                                  : (isMissingOne ? AppColors.tertiary : AppColors.primary),
+                                            ),
+                                            const SizedBox(width: 4),
+                                            Text(
+                                              isAllReady
+                                                  ? 'جاهزة للطهي الآن (${match.availableIngredients.length}/${recipe.ingredients.length})'
+                                                  : (isMissingOne
+                                                      ? 'ينقصك مكوّن واحد فقط'
+                                                      : '${match.availableIngredients.length} من ${recipe.ingredients.length} متوفرة (${(match.score * 100).round()}%)'),
+                                              style: GoogleFonts.manrope(
+                                                fontSize: 10,
+                                                fontWeight: FontWeight.bold,
+                                                color: isAllReady
+                                                    ? AppColors.primary
+                                                    : (isMissingOne ? AppColors.tertiary : AppColors.primary),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      );
+                                    },
                                   ),
                                 ),
 

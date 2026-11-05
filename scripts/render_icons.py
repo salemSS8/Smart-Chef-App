@@ -152,3 +152,4 @@ for path in [out_icon, out_bg, out_fg, out_dash]:
         print(f"Verified {path}: size={img.size}, mode={img.mode}")
     else:
         print(f"Error: missing {path}")
+
