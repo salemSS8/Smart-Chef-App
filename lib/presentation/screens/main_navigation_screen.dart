@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../core/services/app_update_service.dart';
 import '../../core/services/remote_config_service.dart';
 import '../../core/theme/app_colors.dart';
@@ -51,6 +52,7 @@ class _MainNavigationScreenState extends ConsumerState<MainNavigationScreen> {
   @override
   Widget build(BuildContext context) {
     final matching = ref.watch(matchingProvider);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     final screens = [
       TodayScreen(onNavigateToPantry: () => _goToTab(3)),
@@ -150,47 +152,71 @@ class _MainNavigationScreenState extends ConsumerState<MainNavigationScreen> {
           ),
         ],
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _currentIndex,
-        onTap: _goToTab,
-        type: BottomNavigationBarType.fixed,
-        selectedItemColor: AppColors.primary,
-        unselectedItemColor: AppColors.textSecondaryLight,
-        items: [
-          BottomNavigationBarItem(
-            icon: Badge(
-              isLabelVisible: matching.totalReadyCount > 0,
-              label: Text('${matching.totalReadyCount}'),
-              backgroundColor: AppColors.accentGold,
-              child: const Icon(Icons.restaurant_rounded),
+      bottomNavigationBar: Container(
+        decoration: BoxDecoration(
+          color: isDark ? AppColors.surfaceDark : AppColors.surfaceContainerLowest,
+          border: Border(
+            top: BorderSide(
+              color: isDark ? AppColors.borderDark : AppColors.borderLight,
+              width: 1,
             ),
-            label: 'اليوم',
           ),
-          const BottomNavigationBarItem(
-            icon: Icon(Icons.travel_explore_rounded),
-            label: 'اكتشف',
-          ),
-          BottomNavigationBarItem(
-            icon: Container(
-              padding: const EdgeInsets.all(4),
-              decoration: const BoxDecoration(
-                color: AppColors.primary,
-                shape: BoxShape.circle,
+        ),
+        child: BottomNavigationBar(
+          backgroundColor: isDark ? AppColors.surfaceDark : AppColors.surfaceContainerLowest,
+          elevation: 0,
+          currentIndex: _currentIndex,
+          onTap: _goToTab,
+          type: BottomNavigationBarType.fixed,
+          selectedItemColor: isDark ? AppColors.accentSage : AppColors.primary,
+          unselectedItemColor: isDark ? AppColors.textSecondaryDark : AppColors.secondary,
+          selectedLabelStyle: GoogleFonts.cairo(fontWeight: FontWeight.bold, fontSize: 11),
+          unselectedLabelStyle: GoogleFonts.cairo(fontWeight: FontWeight.w500, fontSize: 11),
+          items: [
+            BottomNavigationBarItem(
+              icon: Badge(
+                isLabelVisible: matching.totalReadyCount > 0,
+                label: Text('${matching.totalReadyCount}'),
+                backgroundColor: AppColors.accentGold,
+                child: const Icon(Icons.restaurant_rounded),
               ),
-              child: const Icon(Icons.add_rounded, color: Colors.white, size: 22),
+              label: 'اليوم',
             ),
-            label: 'أنشئ',
-          ),
-          const BottomNavigationBarItem(
-            icon: Icon(Icons.kitchen_rounded),
-            label: 'مطبخي',
-          ),
-          const BottomNavigationBarItem(
-            icon: Icon(Icons.person_outline_rounded),
-            activeIcon: Icon(Icons.person_rounded),
-            label: 'أنا',
-          ),
-        ],
+            const BottomNavigationBarItem(
+              icon: Icon(Icons.travel_explore_rounded),
+              label: 'اكتشف',
+            ),
+            BottomNavigationBarItem(
+              icon: Container(
+                width: 40,
+                height: 40,
+                margin: const EdgeInsets.only(bottom: 2),
+                decoration: BoxDecoration(
+                  color: AppColors.primary,
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.primary.withValues(alpha: 0.28),
+                      blurRadius: 8,
+                      offset: const Offset(0, 3),
+                    ),
+                  ],
+                ),
+                child: const Icon(Icons.add_rounded, color: Colors.white, size: 24),
+              ),
+              label: 'أنشئ',
+            ),
+            const BottomNavigationBarItem(
+              icon: Icon(Icons.kitchen_rounded),
+              label: 'مطبخي',
+            ),
+            const BottomNavigationBarItem(
+              icon: Icon(Icons.person_outline_rounded),
+              activeIcon: Icon(Icons.person_rounded),
+              label: 'أنا',
+            ),
+          ],
+        ),
       ),
     );
   }

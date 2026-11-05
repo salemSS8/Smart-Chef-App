@@ -21,6 +21,10 @@ void main() {
 
   group('TodayScreen Widget Tests', () {
     testWidgets('renders greeting header, filter button, and match stats', (tester) async {
+      tester.view.physicalSize = const Size(1080, 2400);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
@@ -38,12 +42,16 @@ void main() {
         ),
       );
 
-      await tester.pump();
+      await tester.pumpAndSettle();
 
       // Top greeting exists
-      expect(find.text('مساء الخير'), findsOneWidget);
+      expect(find.textContaining('أهلاً بك'), findsOneWidget);
+      // Streak banner exists
+      expect(find.textContaining('يوماً من الطهي المستمر'), findsOneWidget);
       // Filter button icon exists
       expect(find.byIcon(Icons.tune_rounded), findsWidgets);
+      // Simmering Live Cook Card exists
+      expect(find.text('متابعة الطهي'), findsOneWidget);
     });
   });
 }

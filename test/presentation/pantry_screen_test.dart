@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:smart_cook/data/local/app_database.dart';
 import 'package:smart_cook/data/local/database_provider.dart';
-import 'package:smart_cook/presentation/providers/pantry_provider.dart';
 import 'package:smart_cook/presentation/screens/pantry_screen.dart';
 
 void main() {
@@ -21,7 +20,7 @@ void main() {
   });
 
   group('PantryScreen Widget Tests', () {
-    testWidgets('renders search field, quick suggestions, and category tabs', (tester) async {
+    testWidgets('renders search field, bento metrics, and category tabs', (tester) async {
       tester.view.physicalSize = const Size(1080, 2400);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.resetPhysicalSize);
@@ -45,16 +44,23 @@ void main() {
 
       // Search input field exists
       expect(find.byType(TextField), findsOneWidget);
-      // 'بصل' is added by default so chip text shows '✓ بصل'
-      expect(find.text('✓ بصل'), findsOneWidget);
-      // 'ثوم' is not in default pantry so chip text shows '+ ثوم'
-      expect(find.text('+ ثوم'), findsOneWidget);
 
-      // Verify header exists
-      expect(find.text('مطبخي'), findsOneWidget);
+      // Verify Bento metrics exist
+      expect(find.text('إجمالي المؤونة'), findsOneWidget);
+      expect(find.text('تنتهي قريباً'), findsOneWidget);
+      expect(find.text('أوشكت تنفد'), findsOneWidget);
+
+      // Verify AI Recipe Matcher Banner exists
+      expect(find.textContaining('وصفة جاهزة للطهي الآن'), findsOneWidget);
+      expect(find.text('طابق الوصفات من مؤونتي'), findsOneWidget);
+
+      // Verify Category Filter Chips exist
+      expect(find.text('الكل'), findsOneWidget);
+      expect(find.text('خضار وفواكه'), findsOneWidget);
+      expect(find.text('ألبان وبيض'), findsOneWidget);
     });
 
-    testWidgets('tapping quick suggestion toggles ingredient state', (tester) async {
+    testWidgets('tapping category filter selects the chip and updates state', (tester) async {
       tester.view.physicalSize = const Size(1080, 2400);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.resetPhysicalSize);
@@ -68,18 +74,7 @@ void main() {
           child: MaterialApp(
             home: Directionality(
               textDirection: TextDirection.rtl,
-              child: Consumer(
-                builder: (context, ref, child) {
-                  return Scaffold(
-                    body: Column(
-                      children: [
-                        Text('COUNT: ${ref.watch(pantryProvider).length}'),
-                        Expanded(child: PantryScreen(onViewRecipes: () {})),
-                      ],
-                    ),
-                  );
-                },
-              ),
+              child: PantryScreen(onViewRecipes: () {}),
             ),
           ),
         ),
@@ -87,14 +82,14 @@ void main() {
 
       await tester.pumpAndSettle();
 
-      // Tap on '+ ثوم'
-      final garlicChip = find.text('+ ثوم');
-      expect(garlicChip, findsOneWidget);
-      await tester.tap(garlicChip);
+      // Tap on 'خضار وفواكه'
+      final vegChip = find.text('خضار وفواكه');
+      expect(vegChip, findsOneWidget);
+      await tester.tap(vegChip);
       await tester.pumpAndSettle();
 
-      // Now garlic should be toggled to '✓ ثوم'
-      expect(find.text('✓ ثوم'), findsOneWidget);
+      // Verify header section
+      expect(find.text('مؤونة المطبخ الحالية'), findsOneWidget);
     });
   });
 }
