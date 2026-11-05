@@ -161,7 +161,7 @@ class _MainNavigationScreenState extends ConsumerState<MainNavigationScreen> {
             icon: Badge(
               isLabelVisible: matching.totalReadyCount > 0,
               label: Text('${matching.totalReadyCount}'),
-              backgroundColor: AppColors.secondary,
+              backgroundColor: AppColors.accentGold,
               child: const Icon(Icons.restaurant_rounded),
             ),
             label: 'اليوم',

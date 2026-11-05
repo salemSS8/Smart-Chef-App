@@ -162,15 +162,16 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 gradient: const LinearGradient(
-                  colors: [Color(0xFFE8742C), Color(0xFFC0392B)],
+                  colors: [AppColors.primary, Color(0xFF0F261D)],
                   begin: AlignmentDirectional.topStart,
                   end: AlignmentDirectional.bottomEnd,
                 ),
                 borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: AppColors.accentGold.withAlpha(80), width: 1),
               ),
               child: const Row(
                 children: [
-                  Icon(Icons.workspace_premium_rounded, color: Colors.white, size: 32),
+                  Icon(Icons.workspace_premium_rounded, color: AppColors.accentGold, size: 32),
                   SizedBox(width: 12),
                   Expanded(
                     child: Column(
@@ -182,13 +183,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         ),
                         SizedBox(height: 2),
                         Text(
-                          'ذكاء اصطناعي غير محدود وبلا إعلانات (تجربة 7 أيام مجاناً)',
+                          'ذكاء اصطناعي غير محدود، ومزامنة سحابية فائقة (تجربة 7 أيام مجاناً)',
                           style: TextStyle(color: Colors.white70, fontSize: 12),
                         ),
                       ],
                     ),
                   ),
-                  Icon(Icons.arrow_forward_ios_rounded, color: Colors.white, size: 16),
+                  Icon(Icons.arrow_forward_ios_rounded, color: AppColors.accentGold, size: 16),
                 ],
               ),
             ),

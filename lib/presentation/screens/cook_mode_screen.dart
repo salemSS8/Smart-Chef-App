@@ -86,11 +86,11 @@ class _CookModeScreenState extends State<CookModeScreen> {
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        backgroundColor: const Color(0xFF221E1B),
+        backgroundColor: AppColors.darkSurfaceElevated,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: const Row(
           children: [
-            Icon(Icons.alarm_on_rounded, color: AppColors.primary, size: 28),
+            Icon(Icons.alarm_on_rounded, color: AppColors.accentTomato, size: 28),
             SizedBox(width: 8),
             Text('انتهى وقت المؤقت! ⏰', style: TextStyle(color: Colors.white)),
           ],
@@ -138,7 +138,7 @@ class _CookModeScreenState extends State<CookModeScreen> {
   void _showIngredientsSheet() {
     showModalBottomSheet(
       context: context,
-      backgroundColor: const Color(0xFF221E1B),
+      backgroundColor: AppColors.darkSurfaceElevated,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
@@ -208,7 +208,7 @@ class _CookModeScreenState extends State<CookModeScreen> {
 
     // Dark background as in 05 · وضع الطهي
     return Scaffold(
-      backgroundColor: const Color(0xFF171412),
+      backgroundColor: AppColors.darkBackground,
       body: SafeArea(
         child: Column(
           children: [
@@ -245,7 +245,7 @@ class _CookModeScreenState extends State<CookModeScreen> {
                           child: LinearProgressIndicator(
                             value: progress,
                             backgroundColor: Colors.white12,
-                            valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFFE8742C)),
+                            valueColor: const AlwaysStoppedAnimation<Color>(AppColors.accentTomato),
                             minHeight: 4,
                           ),
                         ),
@@ -283,7 +283,7 @@ class _CookModeScreenState extends State<CookModeScreen> {
                     Text(
                       _formatTime(_remainingSeconds),
                       style: const TextStyle(
-                        color: Color(0xFFE8742C),
+                        color: AppColors.accentTomato,
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
                         fontFamily: 'monospace',
@@ -296,7 +296,7 @@ class _CookModeScreenState extends State<CookModeScreen> {
                           style: const TextStyle(color: Colors.white70, fontSize: 13),
                         ),
                         const SizedBox(width: 6),
-                        const Icon(Icons.alarm_rounded, color: Color(0xFFE8742C), size: 18),
+                        const Icon(Icons.alarm_rounded, color: AppColors.accentTomato, size: 18),
                       ],
                     ),
                   ],
@@ -357,7 +357,7 @@ class _CookModeScreenState extends State<CookModeScreen> {
                         child: Container(
                           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
                           decoration: BoxDecoration(
-                            color: const Color(0xFFE8742C),
+                            color: AppColors.accentTomato,
                             borderRadius: BorderRadius.circular(16),
                           ),
                           child: Row(
@@ -438,13 +438,13 @@ class _CookModeScreenState extends State<CookModeScreen> {
 
                   const SizedBox(width: 14),
 
-                  // Next button (warm orange)
+                  // Next button (Saffron Gold)
                   Expanded(
                     flex: 1,
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFFF39E75),
-                        foregroundColor: const Color(0xFF171412),
+                        backgroundColor: AppColors.accentGold,
+                        foregroundColor: AppColors.darkBackground,
                         minimumSize: const Size(0, 56),
                         elevation: 0,
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),

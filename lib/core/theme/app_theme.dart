@@ -14,8 +14,11 @@ class AppTheme {
       colorScheme: const ColorScheme.light(
         primary: AppColors.primary,
         onPrimary: Colors.white,
+        primaryContainer: AppColors.primaryLight,
+        onPrimaryContainer: AppColors.primaryDark,
         secondary: AppColors.secondary,
         onSecondary: Colors.white,
+        secondaryContainer: AppColors.secondaryCream,
         surface: AppColors.surfaceLight,
         onSurface: AppColors.textPrimaryLight,
         error: AppColors.danger,
@@ -25,10 +28,12 @@ class AppTheme {
         displayLarge: textTheme.displayLarge?.copyWith(
           color: AppColors.textPrimaryLight,
           fontWeight: FontWeight.bold,
+          letterSpacing: -0.5,
         ),
         headlineLarge: textTheme.headlineLarge?.copyWith(
           color: AppColors.textPrimaryLight,
           fontWeight: FontWeight.bold,
+          letterSpacing: -0.25,
         ),
         headlineMedium: textTheme.headlineMedium?.copyWith(
           color: AppColors.textPrimaryLight,
@@ -45,10 +50,12 @@ class AppTheme {
         bodyLarge: textTheme.bodyLarge?.copyWith(
           color: AppColors.textPrimaryLight,
           fontSize: 16,
+          height: 1.5,
         ),
         bodyMedium: textTheme.bodyMedium?.copyWith(
           color: AppColors.textSecondaryLight,
           fontSize: 14,
+          height: 1.4,
         ),
       ),
       appBarTheme: const AppBarTheme(
@@ -61,13 +68,14 @@ class AppTheme {
           color: AppColors.textPrimaryLight,
           fontSize: 20,
           fontWeight: FontWeight.bold,
+          fontFamily: 'Cairo',
         ),
       ),
       cardTheme: CardThemeData(
         color: AppColors.cardLight,
         elevation: 0,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(18),
           side: const BorderSide(color: AppColors.borderLight, width: 1),
         ),
       ),
@@ -76,7 +84,10 @@ class AppTheme {
         selectedColor: AppColors.primaryLight,
         side: const BorderSide(color: AppColors.borderLight),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        labelStyle: const TextStyle(fontWeight: FontWeight.w600),
+        labelStyle: const TextStyle(
+          fontWeight: FontWeight.w600,
+          color: AppColors.textPrimaryLight,
+        ),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
@@ -90,6 +101,7 @@ class AppTheme {
           textStyle: const TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.bold,
+            fontFamily: 'Cairo',
           ),
         ),
       ),
@@ -104,6 +116,7 @@ class AppTheme {
           textStyle: const TextStyle(
             fontSize: 15,
             fontWeight: FontWeight.bold,
+            fontFamily: 'Cairo',
           ),
         ),
       ),
@@ -128,10 +141,11 @@ class AppTheme {
       primaryColor: AppColors.primary,
       scaffoldBackgroundColor: AppColors.backgroundDark,
       colorScheme: const ColorScheme.dark(
-        primary: AppColors.primary,
-        onPrimary: Colors.white,
-        secondary: AppColors.secondary,
-        onSecondary: Colors.white,
+        primary: Color(0xFFA5D0BA),
+        onPrimary: Color(0xFF093425),
+        primaryContainer: AppColors.primaryDark,
+        secondary: AppColors.accentGold,
+        onSecondary: Colors.black,
         surface: AppColors.surfaceDark,
         onSurface: AppColors.textPrimaryDark,
         error: AppColors.danger,
@@ -141,6 +155,7 @@ class AppTheme {
         displayLarge: textTheme.displayLarge?.copyWith(
           color: AppColors.textPrimaryDark,
           fontWeight: FontWeight.bold,
+          letterSpacing: -0.5,
         ),
         headlineLarge: textTheme.headlineLarge?.copyWith(
           color: AppColors.textPrimaryDark,
@@ -161,10 +176,12 @@ class AppTheme {
         bodyLarge: textTheme.bodyLarge?.copyWith(
           color: AppColors.textPrimaryDark,
           fontSize: 16,
+          height: 1.5,
         ),
         bodyMedium: textTheme.bodyMedium?.copyWith(
           color: AppColors.textSecondaryDark,
           fontSize: 14,
+          height: 1.4,
         ),
       ),
       appBarTheme: const AppBarTheme(
@@ -177,13 +194,14 @@ class AppTheme {
           color: AppColors.textPrimaryDark,
           fontSize: 20,
           fontWeight: FontWeight.bold,
+          fontFamily: 'Cairo',
         ),
       ),
       cardTheme: CardThemeData(
         color: AppColors.cardDark,
         elevation: 0,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(18),
           side: const BorderSide(color: AppColors.borderDark, width: 1),
         ),
       ),
@@ -206,6 +224,7 @@ class AppTheme {
           textStyle: const TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.bold,
+            fontFamily: 'Cairo',
           ),
         ),
       ),
@@ -220,12 +239,13 @@ class AppTheme {
           textStyle: const TextStyle(
             fontSize: 15,
             fontWeight: FontWeight.bold,
+            fontFamily: 'Cairo',
           ),
         ),
       ),
       bottomNavigationBarTheme: const BottomNavigationBarThemeData(
         backgroundColor: AppColors.surfaceDark,
-        selectedItemColor: AppColors.primary,
+        selectedItemColor: Color(0xFFA5D0BA),
         unselectedItemColor: AppColors.textSecondaryDark,
         type: BottomNavigationBarType.fixed,
         elevation: 8,
