@@ -56,7 +56,7 @@ class SmartCookApp extends ConsumerWidget {
 
     return MaterialApp.router(
       title: appConfig.appTitle,
-      debugShowCheckedModeBanner: appConfig.environment.isDev,
+      debugShowCheckedModeBanner: false,
       routerConfig: router,
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,

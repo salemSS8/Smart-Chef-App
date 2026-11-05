@@ -769,7 +769,9 @@ class _CookModeScreenState extends State<CookModeScreen> {
                 padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
                 children: [
                   // شارة تقنية الطهي والحرارة
-                  Row(
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 6,
                     children: [
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),

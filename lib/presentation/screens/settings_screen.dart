@@ -97,13 +97,16 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               children: [
                 const Icon(Icons.tune_rounded, size: 15, color: AppColors.primary),
                 const SizedBox(width: 6),
-                Text(
-                  'KITCHEN OS • نظام إدارة المطبخ الذكي',
-                  style: GoogleFonts.manrope(
-                    fontSize: 11,
-                    fontWeight: FontWeight.bold,
-                    color: isDark ? AppColors.accentGold : AppColors.primary,
-                    letterSpacing: 0.5,
+                Flexible(
+                  child: Text(
+                    'KITCHEN OS • نظام إدارة المطبخ الذكي',
+                    style: GoogleFonts.manrope(
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                      color: isDark ? AppColors.accentGold : AppColors.primary,
+                      letterSpacing: 0.5,
+                    ),
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
               ],
@@ -375,13 +378,16 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text('معيار قياس المقادير', style: GoogleFonts.cairo(fontWeight: FontWeight.bold, fontSize: 13)),
-                          Text('يُطبّق على بطاقات الوصفات', style: GoogleFonts.cairo(fontSize: 11, color: AppColors.secondary)),
-                        ],
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('معيار قياس المقادير', style: GoogleFonts.cairo(fontWeight: FontWeight.bold, fontSize: 13)),
+                            Text('يُطبّق على بطاقات الوصفات', style: GoogleFonts.cairo(fontSize: 11, color: AppColors.secondary)),
+                          ],
+                        ),
                       ),
+                      const SizedBox(width: 8),
                       Container(
                         padding: const EdgeInsets.all(3),
                         decoration: BoxDecoration(
@@ -603,32 +609,35 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           ),
           const SizedBox(height: 8),
 
-          Row(
-            children: [
-              ChoiceChip(
-                label: const Text('الكل 📁'),
-                selected: _activeFolder == 'all',
-                selectedColor: AppColors.primary,
-                labelStyle: TextStyle(color: _activeFolder == 'all' ? Colors.white : AppColors.primary),
-                onSelected: (_) => setState(() => _activeFolder = 'all'),
-              ),
-              const SizedBox(width: 8),
-              ChoiceChip(
-                label: const Text('وجبات رئيسية 🍲'),
-                selected: _activeFolder == 'lunch',
-                selectedColor: AppColors.primary,
-                labelStyle: TextStyle(color: _activeFolder == 'lunch' ? Colors.white : AppColors.primary),
-                onSelected: (_) => setState(() => _activeFolder = 'lunch'),
-              ),
-              const SizedBox(width: 8),
-              ChoiceChip(
-                label: const Text('سريعة التحضير ⚡'),
-                selected: _activeFolder == 'dinner',
-                selectedColor: AppColors.primary,
-                labelStyle: TextStyle(color: _activeFolder == 'dinner' ? Colors.white : AppColors.primary),
-                onSelected: (_) => setState(() => _activeFolder = 'dinner'),
-              ),
-            ],
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: [
+                ChoiceChip(
+                  label: const Text('الكل 📁'),
+                  selected: _activeFolder == 'all',
+                  selectedColor: AppColors.primary,
+                  labelStyle: TextStyle(color: _activeFolder == 'all' ? Colors.white : AppColors.primary),
+                  onSelected: (_) => setState(() => _activeFolder = 'all'),
+                ),
+                const SizedBox(width: 8),
+                ChoiceChip(
+                  label: const Text('وجبات رئيسية 🍲'),
+                  selected: _activeFolder == 'lunch',
+                  selectedColor: AppColors.primary,
+                  labelStyle: TextStyle(color: _activeFolder == 'lunch' ? Colors.white : AppColors.primary),
+                  onSelected: (_) => setState(() => _activeFolder = 'lunch'),
+                ),
+                const SizedBox(width: 8),
+                ChoiceChip(
+                  label: const Text('سريعة التحضير ⚡'),
+                  selected: _activeFolder == 'dinner',
+                  selectedColor: AppColors.primary,
+                  labelStyle: TextStyle(color: _activeFolder == 'dinner' ? Colors.white : AppColors.primary),
+                  onSelected: (_) => setState(() => _activeFolder = 'dinner'),
+                ),
+              ],
+            ),
           ),
 
           const SizedBox(height: 10),
