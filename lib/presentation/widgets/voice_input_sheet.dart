@@ -1,7 +1,10 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:speech_to_text/speech_recognition_result.dart';
+import 'package:speech_to_text/speech_to_text.dart' as stt;
 import '../../core/theme/app_colors.dart';
+import '../../data/mock/ingredients_data.dart';
 import '../providers/pantry_provider.dart';
 
 class VoiceInputSheet extends ConsumerStatefulWidget {
@@ -22,37 +25,173 @@ class VoiceInputSheet extends ConsumerStatefulWidget {
 
 class _VoiceInputSheetState extends ConsumerState<VoiceInputSheet> with SingleTickerProviderStateMixin {
   late AnimationController _animController;
-  bool _isListening = true;
-  final String _liveSpokenText = '«عندي في المطبخ بيض وبصل وطماطم وشوية دجاج وبطاطس»';
+  final stt.SpeechToText _speech = stt.SpeechToText();
 
-  final List<Map<String, dynamic>> _extractedIngredients = [
-    {'id': 'ing_eggs', 'name': 'بيض'},
-    {'id': 'ing_onion', 'name': 'بصل'},
-    {'id': 'ing_tomato', 'name': 'طماطم'},
-    {'id': 'ing_chicken_breast', 'name': 'دجاج'},
-    {'id': 'ing_potato', 'name': 'بطاطس'},
-  ];
+  bool _isSpeechInitialized = false;
+  bool _isListening = false;
+  String _liveSpokenText = '';
+  String? _statusMessage;
+  String _selectedLocaleId = 'ar_SA';
+
+  final List<Map<String, dynamic>> _extractedIngredients = [];
 
   @override
   void initState() {
     super.initState();
     _animController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1000),
+      duration: const Duration(milliseconds: 900),
     )..repeat(reverse: true);
 
-    // Simulate speech finish after 3 seconds
-    Timer(const Duration(seconds: 3), () {
-      if (mounted) {
+    _initAndStartSpeech();
+  }
+
+  Future<void> _initAndStartSpeech() async {
+    setState(() {
+      _statusMessage = 'جاري تهيئة الميكروفون...';
+    });
+
+    try {
+      final available = await _speech.initialize(
+        onStatus: (status) {
+          if (!mounted) return;
+          if (status == 'listening') {
+            setState(() {
+              _isListening = true;
+              _statusMessage = 'نستمع إليك الآن... تكلّم بطبيعتك 🎙️';
+            });
+          } else if (status == 'notListening' || status == 'done') {
+            setState(() {
+              _isListening = false;
+              if (_extractedIngredients.isNotEmpty) {
+                _statusMessage = 'تم استخراج المكونات بنجاح!';
+              } else if (_liveSpokenText.isNotEmpty) {
+                _statusMessage = 'توقف الاستماع. لم نتعرف على مكونات واضحة، حاول مرة أخرى.';
+              } else {
+                _statusMessage = 'انقر على الميكروفون لبدء التحدث';
+              }
+            });
+          }
+        },
+        onError: (err) {
+          if (!mounted) return;
+          setState(() {
+            _isListening = false;
+            _statusMessage = 'تنبيه: ${err.errorMsg} (انقر لإعادة المحاولة)';
+          });
+        },
+      );
+
+      if (available) {
+        _isSpeechInitialized = true;
+        final locales = await _speech.locales();
+        final arabicLocale = locales.firstWhere(
+          (loc) => loc.localeId.toLowerCase().startsWith('ar'),
+          orElse: () => locales.isNotEmpty ? locales.first : stt.LocaleName('ar_SA', 'Arabic'),
+        );
+        _selectedLocaleId = arabicLocale.localeId;
+        _startListening();
+      } else {
         setState(() {
-          _isListening = false;
+          _statusMessage = 'تعذر تشغيل الميكروفون أو لم يتم منح الإذن.';
         });
       }
+    } catch (e) {
+      setState(() {
+        _statusMessage = 'خطأ في تشغيل ميكروفون الجهاز: $e';
+      });
+    }
+  }
+
+  Future<void> _startListening() async {
+    if (!_speech.isAvailable) return;
+
+    setState(() {
+      _isListening = true;
+      _statusMessage = 'نستمع إليك الآن... قل مثلاً: عندي طماطم وبصل وبيض';
     });
+
+    await _speech.listen(
+      onResult: (SpeechRecognitionResult result) {
+        if (!mounted) return;
+        setState(() {
+          _liveSpokenText = result.recognizedWords;
+        });
+        _extractIngredientsFromText(result.recognizedWords);
+      },
+      listenOptions: stt.SpeechListenOptions(
+        localeId: _selectedLocaleId,
+        listenFor: const Duration(seconds: 40),
+        pauseFor: const Duration(seconds: 4),
+        partialResults: true,
+        cancelOnError: false,
+        listenMode: stt.ListenMode.dictation,
+      ),
+    );
+  }
+
+  Future<void> _stopListening() async {
+    await _speech.stop();
+    if (mounted) {
+      setState(() {
+        _isListening = false;
+      });
+    }
+  }
+
+  void _extractIngredientsFromText(String text) {
+    if (text.trim().isEmpty) return;
+    final lower = text.toLowerCase();
+
+    final found = <Map<String, dynamic>>[];
+    final matchedIds = <String>{};
+
+    // 1. البحث في قاعدة بيانات المكونات المعرفة مسبقاً
+    for (final ing in IngredientsData.allIngredients) {
+      final nameMatches = lower.contains(ing.name.toLowerCase());
+      final synonymMatches = ing.synonyms.any((s) => lower.contains(s.toLowerCase()));
+
+      if ((nameMatches || synonymMatches) && !matchedIds.contains(ing.id)) {
+        matchedIds.add(ing.id);
+        found.add({
+          'id': ing.id,
+          'name': ing.name,
+          'emoji': ing.emoji,
+        });
+      }
+    }
+
+    // 2. إذا لم نجد في القاموس ولكن المستخدم ذكر كلمات مفصولة بـ (و)
+    if (found.isEmpty && text.contains(' ')) {
+      final cleanText = text
+          .replaceAll(RegExp(r'(عندي|في|المطبخ|شوية|كيلو|حبة|حبات|من|مع|اليوم|أبغى|اريد)'), '')
+          .trim();
+      final words = cleanText.split(RegExp(r'[\s،,و]+')).where((w) => w.trim().length > 1);
+
+      for (final w in words) {
+        final wTrim = w.trim();
+        if (wTrim.isNotEmpty && !matchedIds.contains(wTrim)) {
+          matchedIds.add(wTrim);
+          found.add({
+            'id': 'ing_voice_${wTrim.hashCode.abs()}',
+            'name': wTrim,
+            'emoji': '🥗',
+          });
+        }
+      }
+    }
+
+    if (found.isNotEmpty) {
+      setState(() {
+        _extractedIngredients.clear();
+        _extractedIngredients.addAll(found);
+      });
+    }
   }
 
   @override
   void dispose() {
+    _speech.stop();
     _animController.dispose();
     super.dispose();
   }
@@ -105,9 +244,15 @@ class _VoiceInputSheetState extends ConsumerState<VoiceInputSheet> with SingleTi
             // Animated Mic Button
             GestureDetector(
               onTap: () {
-                setState(() {
-                  _isListening = !_isListening;
-                });
+                if (_isListening) {
+                  _stopListening();
+                } else {
+                  if (_isSpeechInitialized) {
+                    _startListening();
+                  } else {
+                    _initAndStartSpeech();
+                  }
+                }
               },
               child: AnimatedBuilder(
                 animation: _animController,
@@ -134,7 +279,11 @@ class _VoiceInputSheetState extends ConsumerState<VoiceInputSheet> with SingleTi
                             ),
                         ],
                       ),
-                      child: const Icon(Icons.mic_rounded, size: 36, color: Colors.white),
+                      child: Icon(
+                        _isListening ? Icons.mic_rounded : Icons.mic_none_rounded,
+                        size: 36,
+                        color: Colors.white,
+                      ),
                     ),
                   );
                 },
@@ -144,9 +293,10 @@ class _VoiceInputSheetState extends ConsumerState<VoiceInputSheet> with SingleTi
             const SizedBox(height: 16),
 
             Text(
-              _isListening ? 'نستمع إليك الآن... تكلّم بطبيعتك' : 'تم استخراج المكونات بنجاح!',
+              _statusMessage ?? (_isListening ? 'نستمع إليك الآن... تكلّم بطبيعتك' : 'انقر على الميكروفون للتحدث'),
+              textAlign: TextAlign.center,
               style: TextStyle(
-                fontSize: 16,
+                fontSize: 15,
                 fontWeight: FontWeight.bold,
                 color: _isListening ? AppColors.primary : AppColors.secondary,
               ),
@@ -166,41 +316,64 @@ class _VoiceInputSheetState extends ConsumerState<VoiceInputSheet> with SingleTi
                 ),
               ),
               child: Text(
-                _liveSpokenText,
+                _liveSpokenText.isEmpty
+                    ? '«تحدث بأي مكونات موجودة لديك، وسيتعرف عليها التطبيق مباشرة...»'
+                    : '«$_liveSpokenText»',
                 textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 14, height: 1.4, fontStyle: FontStyle.italic),
+                style: TextStyle(
+                  fontSize: 14,
+                  height: 1.4,
+                  color: _liveSpokenText.isEmpty ? Colors.grey : (isDark ? Colors.white : Colors.black87),
+                  fontStyle: _liveSpokenText.isEmpty ? FontStyle.italic : FontStyle.normal,
+                ),
               ),
             ),
 
             const SizedBox(height: 20),
 
             // Extracted Ingredients
-            const Align(
-              alignment: AlignmentDirectional.centerStart,
-              child: Text(
-                'المكونات المستخرجة (المس للحذف أو التعديل):',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-              ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'المكونات المكتشفة بالصوت:',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                ),
+                if (_extractedIngredients.isNotEmpty)
+                  Text(
+                    '${_extractedIngredients.length} مكونات',
+                    style: const TextStyle(fontSize: 12, color: AppColors.secondary, fontWeight: FontWeight.bold),
+                  ),
+              ],
             ),
 
             const SizedBox(height: 10),
 
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: _extractedIngredients.map((item) {
-                return Chip(
-                  avatar: const Icon(Icons.check_circle_rounded, color: AppColors.secondary, size: 16),
-                  label: Text(item['name']),
-                  deleteIcon: const Icon(Icons.close_rounded, size: 16),
-                  onDeleted: () {
-                    setState(() {
-                      _extractedIngredients.remove(item);
-                    });
-                  },
-                );
-              }).toList(),
-            ),
+            if (_extractedIngredients.isEmpty)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8.0),
+                child: Text(
+                  'لم يتم اكتشاف مكونات بعد. تحدث بأسماء الأطعمة للبدء.',
+                  style: TextStyle(color: Colors.grey.shade500, fontSize: 13),
+                ),
+              )
+            else
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: _extractedIngredients.map((item) {
+                  return Chip(
+                    avatar: Text(item['emoji'] ?? '🥕', style: const TextStyle(fontSize: 14)),
+                    label: Text(item['name']),
+                    deleteIcon: const Icon(Icons.close_rounded, size: 16),
+                    onDeleted: () {
+                      setState(() {
+                        _extractedIngredients.remove(item);
+                      });
+                    },
+                  );
+                }).toList(),
+              ),
 
             const SizedBox(height: 24),
 

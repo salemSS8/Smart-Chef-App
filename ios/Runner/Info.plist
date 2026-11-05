@@ -45,5 +45,13 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>يحتاج التطبيق إذن الميكروفون للتحكم الصوتي والأوامر بدون لمس أثناء الطهي</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>يحتاج التطبيق إذن التعرف على الكلام لتنفيذ الأوامر الصوتية مثل الخطوة التالية والمؤقت</string>
+	<key>NSCameraUsageDescription</key>
+	<string>يحتاج التطبيق إذن الكاميرا لتصوير محتويات الثلاجة والتعرف على المكونات</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>يحتاج التطبيق إذن الوصول لمعرض الصور لاختيار صور الوصفات والمكونات</string>
 </dict>
 </plist>

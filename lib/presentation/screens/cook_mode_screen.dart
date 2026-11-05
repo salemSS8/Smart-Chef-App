@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
+import '../../core/services/voice_command_service.dart';
 import '../../core/theme/app_colors.dart';
 import '../../domain/models/recipe.dart';
 import 'cook_completed_screen.dart';
@@ -22,20 +23,123 @@ class _CookModeScreenState extends State<CookModeScreen> {
   int _remainingSeconds = 0;
   bool _isTimerRunning = false;
 
+  // Hands-free Voice Assistant Service
+  final VoiceCommandService _voiceService = VoiceCommandService();
+  bool _isVoiceActive = false;
+  String _lastVoiceText = '';
+  String? _voiceFeedbackMessage;
+  Timer? _voiceFeedbackTimer;
+
   @override
   void initState() {
     super.initState();
     // إبقاء الشاشة مضاءة طوال جلسة الطهي لمنع إغلاق الهاتف أثناء انشغال اليدين
     WakelockPlus.enable();
     _initTimerForStep(_currentStepIndex);
+    _initVoiceAssistant();
   }
 
   @override
   void dispose() {
     _countdownTimer?.cancel();
+    _voiceFeedbackTimer?.cancel();
+    _voiceService.stopListening();
     // إعادة ضبط سلوك إغلاق الشاشة الطبيعي عند مغادرة وضع الطهي
     WakelockPlus.disable();
     super.dispose();
+  }
+
+  Future<void> _initVoiceAssistant() async {
+    final ok = await _voiceService.initialize(
+      onStatus: (status) {
+        if (!mounted) return;
+        setState(() {
+          _isVoiceActive = _voiceService.isListening;
+        });
+      },
+    );
+
+    if (ok && mounted) {
+      _startVoiceListening();
+    }
+  }
+
+  Future<void> _startVoiceListening() async {
+    try {
+      await _voiceService.startListening(
+        onPartialResult: (text) {
+          if (!mounted) return;
+          setState(() {
+            _lastVoiceText = text;
+          });
+        },
+        onCommandDetected: (cmd) {
+          if (!mounted) return;
+          _handleVoiceCommand(cmd);
+        },
+      );
+      if (mounted) {
+        setState(() => _isVoiceActive = true);
+      }
+    } catch (e) {
+      debugPrint('Voice start error: $e');
+    }
+  }
+
+  Future<void> _stopVoiceListening() async {
+    await _voiceService.stopListening();
+    if (mounted) {
+      setState(() => _isVoiceActive = false);
+    }
+  }
+
+  void _showVoiceFeedback(String msg) {
+    _voiceFeedbackTimer?.cancel();
+    if (mounted) {
+      setState(() => _voiceFeedbackMessage = msg);
+      _voiceFeedbackTimer = Timer(const Duration(seconds: 3), () {
+        if (mounted) setState(() => _voiceFeedbackMessage = null);
+      });
+    }
+  }
+
+  void _handleVoiceCommand(VoiceCommand cmd) {
+    switch (cmd.type) {
+      case VoiceCommandType.nextStep:
+        _showVoiceFeedback('الانتقال للخطوة التالية ⏩');
+        _nextStep();
+        break;
+      case VoiceCommandType.prevStep:
+        _showVoiceFeedback('العودة للخطوة السابقة ⏪');
+        _prevStep();
+        break;
+      case VoiceCommandType.toggleTimer:
+        _showVoiceFeedback(_isTimerRunning ? 'إيقاف المؤقت ⏸️' : 'تشغيل المؤقت ⏱️');
+        _toggleTimer();
+        break;
+      case VoiceCommandType.startTimer:
+        if (cmd.timerMinutes != null && cmd.timerMinutes! > 0) {
+          _showVoiceFeedback('تشغيل مؤقت ${cmd.timerMinutes} دقائق ⏱️');
+          _startTimerWithSeconds(cmd.timerMinutes! * 60);
+        } else {
+          _showVoiceFeedback('تشغيل المؤقت ⏱️');
+          if (!_isTimerRunning) _toggleTimer();
+        }
+        break;
+      case VoiceCommandType.pauseTimer:
+        _showVoiceFeedback('إيقاف المؤقت مؤقتاً ⏸️');
+        if (_isTimerRunning) _toggleTimer();
+        break;
+      case VoiceCommandType.showIngredients:
+        _showVoiceFeedback('عرض مقادير الوصفة 📋');
+        _showIngredientsSheet();
+        break;
+      case VoiceCommandType.repeatStep:
+        _showVoiceFeedback('تكرار الخطوة الحالية 🔁');
+        break;
+      case VoiceCommandType.unknown:
+        break;
+    }
   }
 
   void _initTimerForStep(int index) {
@@ -51,6 +155,32 @@ class _CookModeScreenState extends State<CookModeScreen> {
         _remainingSeconds = 0;
       });
     }
+  }
+
+  void _startTimerWithSeconds(int seconds) {
+    _countdownTimer?.cancel();
+    setState(() {
+      _remainingSeconds = seconds;
+      _isTimerRunning = true;
+    });
+    _countdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (_remainingSeconds > 1) {
+        if (mounted) {
+          setState(() {
+            _remainingSeconds--;
+          });
+        }
+      } else {
+        timer.cancel();
+        if (mounted) {
+          setState(() {
+            _remainingSeconds = 0;
+            _isTimerRunning = false;
+          });
+          _showTimerAlert();
+        }
+      }
+    });
   }
 
   void _toggleTimer() {
@@ -212,7 +342,7 @@ class _CookModeScreenState extends State<CookModeScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            // Top Navigation matching 05 mockup
+            // Top Navigation matching 05 mockup with interactive mic
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
               child: Row(
@@ -238,6 +368,9 @@ class _CookModeScreenState extends State<CookModeScreen> {
                             fontSize: 14,
                             fontWeight: FontWeight.bold,
                           ),
+                          textAlign: TextAlign.center,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
                         const SizedBox(height: 8),
                         ClipRRect(
@@ -253,7 +386,31 @@ class _CookModeScreenState extends State<CookModeScreen> {
                     ),
                   ),
 
-                  const SizedBox(width: 12),
+                  const SizedBox(width: 10),
+
+                  // Voice Toggle Action
+                  CircleAvatar(
+                    backgroundColor: _isVoiceActive
+                        ? AppColors.primary.withAlpha(80)
+                        : Colors.white.withAlpha(20),
+                    child: IconButton(
+                      icon: Icon(
+                        _isVoiceActive ? Icons.mic_rounded : Icons.mic_off_rounded,
+                        color: _isVoiceActive ? AppColors.accentGold : Colors.white70,
+                      ),
+                      tooltip: _isVoiceActive ? 'التحكم الصوتي مفعّل' : 'تفعيل التحكم الصوتي',
+                      onPressed: () {
+                        if (_isVoiceActive) {
+                          _stopVoiceListening();
+                        } else {
+                          _startVoiceListening();
+                        }
+                      },
+                    ),
+                  ),
+
+                  const SizedBox(width: 8),
+
                   // Ingredients sheet button
                   CircleAvatar(
                     backgroundColor: Colors.white.withAlpha(20),
@@ -266,6 +423,35 @@ class _CookModeScreenState extends State<CookModeScreen> {
                 ],
               ),
             ),
+
+            // Voice Command Execution Feedback Pill
+            if (_voiceFeedbackMessage != null)
+              Container(
+                margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                decoration: BoxDecoration(
+                  color: AppColors.primary,
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.primary.withAlpha(60),
+                      blurRadius: 8,
+                      offset: const Offset(0, 3),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.check_circle_outline_rounded, color: AppColors.accentGold, size: 18),
+                    const SizedBox(width: 8),
+                    Text(
+                      _voiceFeedbackMessage!,
+                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
+                    ),
+                  ],
+                ),
+              ),
 
             // Floating Active Timer if running
             if (_isTimerRunning || _remainingSeconds > 0)
@@ -396,19 +582,56 @@ class _CookModeScreenState extends State<CookModeScreen> {
                         ),
                       ),
 
-                    const SizedBox(height: 18),
+                    const SizedBox(height: 20),
 
-                    // Voice Command Hint (matching 05 mockup)
-                    const Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          'قل «التالي» أو «كرر» أو «مؤقت 5 دقائق»',
-                          style: TextStyle(color: Colors.white38, fontSize: 13),
+                    // Live Interactive Voice Command Bar
+                    InkWell(
+                      onTap: () {
+                        if (_isVoiceActive) {
+                          _stopVoiceListening();
+                        } else {
+                          _startVoiceListening();
+                        }
+                      },
+                      borderRadius: BorderRadius.circular(16),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        decoration: BoxDecoration(
+                          color: _isVoiceActive
+                              ? AppColors.primary.withAlpha(35)
+                              : Colors.white.withAlpha(6),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: _isVoiceActive ? AppColors.accentGold.withAlpha(80) : Colors.white12,
+                          ),
                         ),
-                        SizedBox(width: 6),
-                        Icon(Icons.mic_none_rounded, color: Colors.white38, size: 16),
-                      ],
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              _isVoiceActive ? Icons.mic_rounded : Icons.mic_none_rounded,
+                              color: _isVoiceActive ? AppColors.accentGold : Colors.white38,
+                              size: 20,
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                _isVoiceActive
+                                    ? (_lastVoiceText.isNotEmpty
+                                        ? 'سمعت: «$_lastVoiceText»'
+                                        : '🎧 نستمع إليك... قل: التالي، السابق، مؤقت، المقادير')
+                                    : 'انقر لتفعيل الأوامر الصوتية بدون لمس 🎙️',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  color: _isVoiceActive ? AppColors.accentGold : Colors.white38,
+                                  fontSize: 13,
+                                  fontWeight: _isVoiceActive ? FontWeight.w600 : FontWeight.normal,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
                   ],
                 ),

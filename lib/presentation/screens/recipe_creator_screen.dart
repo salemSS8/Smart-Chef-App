@@ -1,5 +1,8 @@
+import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../core/services/creator_recipe_service.dart';
 import '../../core/services/gemini_ai_service.dart';
 import '../../core/theme/app_colors.dart';
@@ -292,6 +295,97 @@ class _RecipeCreatorScreenState extends ConsumerState<RecipeCreatorScreen> {
     }
   }
 
+  Future<void> _pickCoverImage(ImageSource source) async {
+    try {
+      final ImagePicker picker = ImagePicker();
+      final XFile? file = await picker.pickImage(
+        source: source,
+        maxWidth: 1600,
+        maxHeight: 900,
+        imageQuality: 85,
+      );
+      if (file != null) {
+        setState(() {
+          _imageUrlController.text = file.path;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('تعذر التقاط الصورة: $e')),
+        );
+      }
+    }
+  }
+
+  void _showImageSourceDialog() {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('اختيار صورة غلاف الوصفة', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 14),
+              ListTile(
+                leading: const Icon(Icons.camera_alt_rounded, color: AppColors.primary),
+                title: const Text('التقاط صورة بالكاميرا 📸'),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  _pickCoverImage(ImageSource.camera);
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.photo_library_rounded, color: AppColors.primary),
+                title: const Text('اختيار من معرض الصور 🖼️'),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  _pickCoverImage(ImageSource.gallery);
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.link_rounded, color: AppColors.primary),
+                title: const Text('إدخال رابط صورة عبر الويب 🔗'),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  _showUrlInputDialog();
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showUrlInputDialog() {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('رابط صورة الوصفة'),
+        content: TextField(
+          controller: _imageUrlController,
+          decoration: const InputDecoration(hintText: 'https://...'),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              setState(() {});
+              Navigator.pop(ctx);
+            },
+            child: const Text('حفظ'),
+          ),
+        ],
+      ),
+    );
+  }
+
   // تجميع الوصفة وحفظها / إرسالها
   Future<void> _submitRecipe({required bool isDraft}) async {
     if (!isDraft && !_formKey.currentState!.validate()) {
@@ -557,17 +651,28 @@ class _RecipeCreatorScreenState extends ConsumerState<RecipeCreatorScreen> {
                         child: Stack(
                           fit: StackFit.expand,
                           children: [
-                            Image.network(
-                              _imageUrlController.text.trim().isNotEmpty
-                                  ? _imageUrlController.text.trim()
-                                  : 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=800&q=80',
-                              fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) => Container(
-                                color: AppColors.secondaryCream,
-                                child: const Center(
-                                  child: Icon(Icons.image_not_supported_rounded, size: 40, color: AppColors.secondary),
-                                ),
-                              ),
+                            Builder(
+                              builder: (context) {
+                                final path = _imageUrlController.text.trim();
+                                if (!kIsWeb && path.isNotEmpty && File(path).existsSync()) {
+                                  return Image.file(
+                                    File(path),
+                                    fit: BoxFit.cover,
+                                  );
+                                }
+                                return Image.network(
+                                  path.isNotEmpty
+                                      ? path
+                                      : 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=800&q=80',
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) => Container(
+                                    color: AppColors.secondaryCream,
+                                    child: const Center(
+                                      child: Icon(Icons.image_not_supported_rounded, size: 40, color: AppColors.secondary),
+                                    ),
+                                  ),
+                                );
+                              },
                             ),
                             Positioned(
                               bottom: 12,
@@ -590,29 +695,9 @@ class _RecipeCreatorScreenState extends ConsumerState<RecipeCreatorScreen> {
                                       foregroundColor: AppColors.primary,
                                       elevation: 0,
                                     ),
-                                    icon: const Icon(Icons.edit_rounded, size: 16),
-                                    label: const Text('تغيير الرابط'),
-                                    onPressed: () {
-                                      showDialog(
-                                        context: context,
-                                        builder: (ctx) => AlertDialog(
-                                          title: const Text('رابط صورة الوصفة'),
-                                          content: TextField(
-                                            controller: _imageUrlController,
-                                            decoration: const InputDecoration(hintText: 'https://...'),
-                                          ),
-                                          actions: [
-                                            TextButton(
-                                              onPressed: () {
-                                                setState(() {});
-                                                Navigator.pop(ctx);
-                                              },
-                                              child: const Text('حفظ'),
-                                            ),
-                                          ],
-                                        ),
-                                      );
-                                    },
+                                    icon: const Icon(Icons.photo_camera_rounded, size: 16),
+                                    label: const Text('الكاميرا / المعرض'),
+                                    onPressed: _showImageSourceDialog,
                                   ),
                                 ],
                               ),

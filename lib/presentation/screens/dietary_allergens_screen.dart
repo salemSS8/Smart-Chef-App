@@ -210,3 +210,4 @@ class _DietaryAllergensScreenState extends State<DietaryAllergensScreen> {
     );
   }
 }
+
