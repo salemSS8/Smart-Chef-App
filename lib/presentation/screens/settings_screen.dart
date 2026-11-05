@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../core/services/app_update_service.dart';
 import '../../core/services/sync_service.dart';
 import '../../core/theme/app_colors.dart';
@@ -12,6 +13,12 @@ import '../widgets/auth_modal.dart';
 import '../widgets/recipe_card.dart';
 import 'paywall_screen.dart';
 import 'onboarding_screen.dart';
+import 'meal_planner_screen.dart';
+import 'cookbooks_screen.dart';
+import 'dietary_allergens_screen.dart';
+import 'recipe_creator_screen.dart';
+import 'creator_submissions_screen.dart';
+import 'shopping_screen.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
@@ -192,6 +199,113 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   Icon(Icons.arrow_forward_ios_rounded, color: AppColors.accentGold, size: 16),
                 ],
               ),
+            ),
+          ),
+
+          const SizedBox(height: 24),
+
+          // SECTION: أدوات الطاهي والداشبورد 👨‍🍳
+          const Text('أدوات الطاهي وتكامل الداشبورد 👨‍🍳', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 10),
+
+          Card(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(18),
+              side: const BorderSide(color: AppColors.borderLight),
+            ),
+            child: Column(
+              children: [
+                ListTile(
+                  leading: const Icon(Icons.calendar_month_rounded, color: AppColors.primary),
+                  title: const Text('مخطط الوجبات الأسبوعي 🗓️', style: TextStyle(fontWeight: FontWeight.bold)),
+                  subtitle: const Text('تنظيم وجبات السبت إلى الجمعة وتوليد المشتريات تلقائياً'),
+                  trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 14),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const MealPlannerScreen()),
+                    );
+                  },
+                ),
+                const Divider(height: 1),
+                ListTile(
+                  leading: const Icon(Icons.menu_book_rounded, color: AppColors.accentGold),
+                  title: const Text('كتيباتي والوصفات المحفوظة 📚', style: TextStyle(fontWeight: FontWeight.bold)),
+                  subtitle: const Text('مجموعات مخصصة وسجل الطهي المنزلي'),
+                  trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 14),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const CookbooksScreen()),
+                    );
+                  },
+                ),
+                const Divider(height: 1),
+                ListTile(
+                  leading: const Icon(Icons.health_and_safety_rounded, color: AppColors.accentTomato),
+                  title: const Text('الحساسيات والأنظمة الغذائية 🥗', style: TextStyle(fontWeight: FontWeight.bold)),
+                  subtitle: const Text('استبعاد المكونات الضارة وحماية صحة الأسرة'),
+                  trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 14),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const DietaryAllergensScreen()),
+                    );
+                  },
+                ),
+                const Divider(height: 1),
+                ListTile(
+                  leading: const Icon(Icons.add_circle_outline_rounded, color: AppColors.primary),
+                  title: const Text('استوديو ابتكار الوصفات ✍️', style: TextStyle(fontWeight: FontWeight.bold)),
+                  subtitle: const Text('تأليف وصفات جديدة بمساعدة AI وإرسالها للنشر'),
+                  trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 14),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const RecipeCreatorScreen()),
+                    );
+                  },
+                ),
+                const Divider(height: 1),
+                ListTile(
+                  leading: const Icon(Icons.fact_check_rounded, color: AppColors.primary),
+                  title: const Text('لوحة المبدع وحالة الوصفات 📋', style: TextStyle(fontWeight: FontWeight.bold)),
+                  subtitle: const Text('متابعة التدقيق التحريري والوصفات المعتمدة في الداشبورد'),
+                  trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 14),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const CreatorSubmissionsScreen()),
+                    );
+                  },
+                ),
+                const Divider(height: 1),
+                ListTile(
+                  leading: const Icon(Icons.shopping_cart_outlined, color: AppColors.primary),
+                  title: const Text('قائمة التسوق الذكية 🛒', style: TextStyle(fontWeight: FontWeight.bold)),
+                  subtitle: const Text('النواقص المقترحة من الوصفات والمخطط'),
+                  trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 14),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const ShoppingScreen()),
+                    );
+                  },
+                ),
+                const Divider(height: 1),
+                ListTile(
+                  leading: const Icon(Icons.dashboard_customize_rounded, color: AppColors.accentGold),
+                  title: const Text('لوحة تحكم المشرف (Web Dashboard) 🌐', style: TextStyle(fontWeight: FontWeight.bold)),
+                  subtitle: const Text('smart-cook-admin.vercel.app — إدارة المحتوى والوصفات'),
+                  trailing: const Icon(Icons.open_in_new_rounded, size: 16),
+                  onTap: () async {
+                    final uri = Uri.parse('https://smart-cook-admin.vercel.app');
+                    if (await canLaunchUrl(uri)) {
+                      await launchUrl(uri, mode: LaunchMode.externalApplication);
+                    }
+                  },
+                ),
+              ],
             ),
           ),
 

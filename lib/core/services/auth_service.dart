@@ -33,6 +33,24 @@ class AuthService {
 
   AuthUser _currentUser = AuthUser.guest;
 
+  /// الحصول على المستخدم الحالي أو الضيف بشكل ثابت من أي مكان في التطبيق
+  static AuthUser get activeUser {
+    try {
+      if (Supabase.instance.isInitialized) {
+        final user = Supabase.instance.client.auth.currentUser;
+        if (user != null) {
+          return AuthUser(
+            id: user.id,
+            email: user.email,
+            displayName: user.userMetadata?['display_name'] as String?,
+            isAnonymous: user.isAnonymous,
+          );
+        }
+      }
+    } catch (_) {}
+    return AuthUser.guest;
+  }
+
   AuthService(this.config) {
     _init();
   }

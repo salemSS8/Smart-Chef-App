@@ -41,3 +41,6 @@ final matchingProvider = Provider<MatchingState>((ref) {
     totalReadyCount: ready.length,
   );
 });
+
+/// مزود قائمة جميع الوصفات المعتمدة في الكتالوج
+final recipesProvider = Provider<List<Recipe>>((ref) => RecipesData.allRecipes);

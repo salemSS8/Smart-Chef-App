@@ -4,11 +4,10 @@ import '../../core/services/app_update_service.dart';
 import '../../core/services/remote_config_service.dart';
 import '../../core/theme/app_colors.dart';
 import '../providers/matching_provider.dart';
-import '../providers/shopping_provider.dart';
 import 'today_screen.dart';
 import 'pantry_screen.dart';
 import 'discover_screen.dart';
-import 'shopping_screen.dart';
+import 'recipe_creator_screen.dart';
 import 'settings_screen.dart';
 
 class MainNavigationScreen extends ConsumerStatefulWidget {
@@ -52,14 +51,12 @@ class _MainNavigationScreenState extends ConsumerState<MainNavigationScreen> {
   @override
   Widget build(BuildContext context) {
     final matching = ref.watch(matchingProvider);
-    final shoppingList = ref.watch(shoppingProvider);
-    final pendingShoppingCount = shoppingList.where((i) => !i.isCompleted).length;
 
     final screens = [
-      TodayScreen(onNavigateToPantry: () => _goToTab(1)),
-      PantryScreen(onViewRecipes: () => _goToTab(0)),
+      TodayScreen(onNavigateToPantry: () => _goToTab(3)),
       const DiscoverScreen(),
-      const ShoppingScreen(),
+      const RecipeCreatorScreen(),
+      PantryScreen(onViewRecipes: () => _goToTab(0)),
       const SettingsScreen(),
     ];
 
@@ -156,6 +153,9 @@ class _MainNavigationScreenState extends ConsumerState<MainNavigationScreen> {
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
         onTap: _goToTab,
+        type: BottomNavigationBarType.fixed,
+        selectedItemColor: AppColors.primary,
+        unselectedItemColor: AppColors.textSecondaryLight,
         items: [
           BottomNavigationBarItem(
             icon: Badge(
@@ -167,22 +167,23 @@ class _MainNavigationScreenState extends ConsumerState<MainNavigationScreen> {
             label: 'اليوم',
           ),
           const BottomNavigationBarItem(
-            icon: Icon(Icons.kitchen_rounded),
-            label: 'مطبخي',
-          ),
-          const BottomNavigationBarItem(
             icon: Icon(Icons.travel_explore_rounded),
             label: 'اكتشف',
           ),
           BottomNavigationBarItem(
-            icon: Badge(
-              isLabelVisible: pendingShoppingCount > 0,
-              label: Text('$pendingShoppingCount'),
-              backgroundColor: AppColors.primary,
-              child: const Icon(Icons.shopping_cart_outlined),
+            icon: Container(
+              padding: const EdgeInsets.all(4),
+              decoration: const BoxDecoration(
+                color: AppColors.primary,
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.add_rounded, color: Colors.white, size: 22),
             ),
-            activeIcon: const Icon(Icons.shopping_cart_rounded),
-            label: 'التسوق',
+            label: 'أنشئ',
+          ),
+          const BottomNavigationBarItem(
+            icon: Icon(Icons.kitchen_rounded),
+            label: 'مطبخي',
           ),
           const BottomNavigationBarItem(
             icon: Icon(Icons.person_outline_rounded),

@@ -9,7 +9,10 @@ import '../providers/shopping_provider.dart';
 import '../widgets/filters_bottom_sheet.dart';
 import 'ai_inspire_screen.dart';
 import 'recipe_detail_screen.dart';
-import '../widgets/smart_ad_banner.dart';
+import 'meal_planner_screen.dart';
+import 'cookbooks_screen.dart';
+import 'dietary_allergens_screen.dart';
+import 'shopping_screen.dart';
 
 class TodayScreen extends ConsumerStatefulWidget {
   final VoidCallback onNavigateToPantry;
@@ -81,25 +84,49 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  // Filter button
-                  InkWell(
-                    onTap: _openFilters,
-                    borderRadius: BorderRadius.circular(14),
-                    child: Container(
-                      width: 48,
-                      height: 48,
-                      decoration: BoxDecoration(
-                        color: isDark ? AppColors.surfaceDark : Colors.white,
+                  // Filter & Shopping buttons
+                  Row(
+                    children: [
+                      InkWell(
+                        onTap: _openFilters,
                         borderRadius: BorderRadius.circular(14),
-                        border: Border.all(
-                          color: _currentFilter.maxMinutes != null || _currentFilter.cuisines.isNotEmpty
-                              ? AppColors.primary
-                              : AppColors.borderLight,
-                          width: 1.5,
+                        child: Container(
+                          width: 44,
+                          height: 44,
+                          decoration: BoxDecoration(
+                            color: isDark ? AppColors.surfaceDark : Colors.white,
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(
+                              color: _currentFilter.maxMinutes != null || _currentFilter.cuisines.isNotEmpty
+                                  ? AppColors.primary
+                                  : AppColors.borderLight,
+                              width: 1.5,
+                            ),
+                          ),
+                          child: const Icon(Icons.tune_rounded, color: AppColors.textPrimaryLight, size: 22),
                         ),
                       ),
-                      child: const Icon(Icons.tune_rounded, color: AppColors.textPrimaryLight),
-                    ),
+                      const SizedBox(width: 8),
+                      InkWell(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (_) => const ShoppingScreen()),
+                          );
+                        },
+                        borderRadius: BorderRadius.circular(14),
+                        child: Container(
+                          width: 44,
+                          height: 44,
+                          decoration: BoxDecoration(
+                            color: isDark ? AppColors.surfaceDark : Colors.white,
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(color: AppColors.borderLight, width: 1.5),
+                          ),
+                          child: const Icon(Icons.shopping_bag_outlined, color: AppColors.primary, size: 22),
+                        ),
+                      ),
+                    ],
                   ),
 
                   // Greeting & Stats with Brand Avatar
@@ -192,6 +219,64 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
                     ),
                     const SizedBox(width: 10),
                     const Icon(Icons.access_time_filled_rounded, color: AppColors.primary, size: 22),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 16),
+
+              // Quick Editorial Hub
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: [
+                    _buildHubChip(
+                      icon: Icons.calendar_month_rounded,
+                      label: 'مخطط الوجبات 🗓️',
+                      color: AppColors.primary,
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => const MealPlannerScreen()),
+                        );
+                      },
+                    ),
+                    const SizedBox(width: 8),
+                    _buildHubChip(
+                      icon: Icons.menu_book_rounded,
+                      label: 'كتيباتي 📚',
+                      color: AppColors.accentGold,
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => const CookbooksScreen()),
+                        );
+                      },
+                    ),
+                    const SizedBox(width: 8),
+                    _buildHubChip(
+                      icon: Icons.health_and_safety_rounded,
+                      label: 'الحساسيات 🥗',
+                      color: AppColors.accentTomato,
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => const DietaryAllergensScreen()),
+                        );
+                      },
+                    ),
+                    const SizedBox(width: 8),
+                    _buildHubChip(
+                      icon: Icons.auto_awesome,
+                      label: 'إلهام AI ✨',
+                      color: AppColors.primary,
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => const AiInspireScreen()),
+                        );
+                      },
+                    ),
                   ],
                 ),
               ),
@@ -318,11 +403,6 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
                   ],
                 ),
               ),
-
-              const SizedBox(height: 16),
-
-              // Banner Ad (disappears for Pro subscribers)
-              const SmartAdBanner(),
 
               const SizedBox(height: 32),
             ],
@@ -559,6 +639,44 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHubChip({
+    required IconData icon,
+    required String label,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(14),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: AppColors.borderLight),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withAlpha(8),
+              blurRadius: 6,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 18, color: color),
+            const SizedBox(width: 8),
+            Text(
+              label,
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: AppColors.textPrimaryLight),
+            ),
+          ],
         ),
       ),
     );
