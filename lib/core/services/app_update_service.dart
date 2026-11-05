@@ -169,6 +169,28 @@ class AppUpdateService {
     }
   }
 
+  /// فحص يدوي للتحديثات بطلب من المستخدم مع إظهار النتيجة
+  static Future<void> manualCheckForUpdates(BuildContext context) async {
+    final scaffold = ScaffoldMessenger.of(context);
+    scaffold.showSnackBar(
+      const SnackBar(
+        content: Text('جاري البحث عن تحديثات جديدة...'),
+        duration: Duration(seconds: 2),
+      ),
+    );
+    final info = await checkUpdate();
+    if (info != null && info.hasUpdate && context.mounted) {
+      await showUpdateDialog(context, info);
+    } else if (context.mounted) {
+      scaffold.showSnackBar(
+        const SnackBar(
+          content: Text('أنت تستخدم أحدث إصدار من تطبيق سمارت كوك'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+    }
+  }
+
   /// نافذة تحديث أنيقة تدعم التحميل المباشر لملف الـ APK
   static Future<void> showUpdateDialog(
     BuildContext context,
